@@ -38,6 +38,7 @@ class LLamaEmb {
 private:
     llama_model* model = nullptr;
     llama_context* ctx = nullptr;
+    size_t ctx_size = 512;
     std::mutex mtx;
     const int emb_dim = 384;
 

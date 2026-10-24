@@ -7,7 +7,6 @@ using std::endl;
 LLamaEmb::LLamaEmb() {
     llama_backend_init();
     llama_model_params mparams = llama_model_default_params();
-    size_t  ctx_size = 512;
     mparams.n_gpu_layers = 99;
 
     std::vector<cstring> model_pathes = {
@@ -24,10 +23,9 @@ LLamaEmb::LLamaEmb() {
 
     llama_context_params cparams = llama_context_default_params();
     
-    cparams.n_ctx = ctx_size;
-    cparams.n_batch = ctx_size;
-    cparams.n_ubatch = ctx_size;
-
+    cparams.n_ctx       = ctx_size;
+    cparams.n_batch     = ctx_size;
+    cparams.n_ubatch    = ctx_size;
     cparams.embeddings = true;
     cparams.pooling_type = LLAMA_POOLING_TYPE_MEAN;
 
@@ -50,7 +48,7 @@ LLamaEmb& LLamaEmb::getInst() {
 }
 
 std::vector<float> LLamaEmb::compute(const std::string& text) {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::scoped_lock<std::mutex> lock(mtx);
     const llama_vocab* vocab = llama_model_get_vocab(model);
     if (!vocab) {
         throw std::runtime_error("failed to get llama vocab");
@@ -75,9 +73,9 @@ std::vector<float> LLamaEmb::compute(const std::string& text) {
     tokens.resize(n_tokens);
 
     // Safety truncate for bge-small-en-v1.5 (max 512 tokens)
-    if (tokens.size() > 512) {
-        tokens.resize(512);
-        n_tokens = 512;
+    if (tokens.size() > ctx_size) {
+        tokens.resize(ctx_size);
+        n_tokens = ctx_size;
     }
 
     llama_batch_ext* batch = llama_batch_ext_init(ctx);
@@ -101,7 +99,7 @@ std::vector<float> LLamaEmb::compute(const std::string& text) {
     }
 
     const float* emb_data = llama_get_embeddings_seq(ctx, 0);
-    if (!emb_data) {
+    if (emb_data == nullptr) {
         emb_data = llama_get_embeddings(ctx);
     }
 
