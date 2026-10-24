@@ -1,4 +1,5 @@
 #include "inc/base.hpp"
+#include "param.cpp"
 
 using json = nlohmann::json;
 using std::cerr;
@@ -198,51 +199,49 @@ json handle_req(const json& req,DocEngine& engine){
         res["result"] = {
             {"protocolVersion","2024-11-05"},
             {"capabilities", {{"tools", json::object()}}},
-            {"serverInfo",{{"name","cpp-mcp-engine"},{"version","1.0.0"}}}
+            {"serverInfo",{{"name","vex-rag"},{"version","1.0.0"}}}
         };
     } else if (method == "tools/list") {
+        Tool search_tool = Tool {
+            .name = "search_docs",
+            .description = "Run FTS5 text search over indexed documents",
+            .required = {"query"},
+            .params = {
+                Param{.name = "query",.desc = "Search query term"},
+                Param{
+                    .name ="mode",.desc="search mode: VECTOR | BM25 | HYBRID",
+                    .enum_list = {"VECTOR", "BM25", "HYBRID"}
+                },
+                Param{.name="limit",.desc="Count of returned chunks",.type="integer"}
+            }
+        };
+        Tool insert_tool = Tool {
+            .name = "insert_doc",
+            .description = "Insert a raw document snippet or chunk into FTS5 index",
+            .required = {"title", "path","domain"},
+            .params = {
+                Param{.name = "title",.desc = "Document title"},
+                Param{.name ="path",.desc="Filepath for a document"},
+                Param{.name ="domain",.desc="Category or tag",}
+            }
+        };
+        Tool delete_doc = Tool {
+            .name = "delete_doc",
+            .description = "Delete document by its title",
+            .required = {"title"},
+            .params = {
+                Param{.name = "title",.desc = "Document title"},
+            }
+        };
+        
+        // add del_docs later
         res["result"] = {
             {"tools", json::array({
-                {
-                    {"name", "search_docs"},
-                    {"description", "Run FTS5 text search over indexed documents"},
-                    {"inputSchema", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"query", {{"type", "string"}, {"description", "Search query term"}}},
-                            {"mode", {{"type", "string"}, {"description", "search mode: VECTOR | BM25 | HYBRID"},
-                                {"enum", {"VECTOR", "BM25", "HYBRID"}}}},
-                            {"limit",{{"type","integer"},{"description","Count of returned chunks"}}}
-                        }},
-                        {"required", json::array({"query"})}
-                    }}
-                },
-                {
-                    {"name", "insert_doc"},
-                    {"description", "Insert a raw document snippet or chunk into FTS5 index"},
-                    {"inputSchema", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"title", {{"type", "string"}, {"description", "Document title/path"}}},
-                            {"path", {{"type", "string"}, {"description", "Filepath for a document"}}},
-                            {"domain", {{"type", "string"}, {"description", "Category or tag"}}}
-                        }},
-                        {"required", json::array({"title", "path","domain"})}
-                    }}
-                },
-                {
-                    {"name", "delete_doc"},
-                    {"description", "Delete document by its title"},
-                    {"inputSchema", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"title", {{"type", "string"}, {"description", "Document title/path"}}},
-                        }},
-                        {"required", json::array({"title"})}
-                    }}
-                }
+                to_mcp_json(search_tool),
+                to_mcp_json(insert_tool),
             })}
         };
+
     } else if (method == "tools/call") {
         std::string tool_name = req["params"].value("name","");
         json args = req["params"].value("arguments",json::object());
@@ -298,6 +297,8 @@ int main() {
     cerr << "Selected db_path " << db_path << endl;
     DocEngine engine(db_path);
     LLamaEmb::getInst();
+
+    
 
     std::string line;
 

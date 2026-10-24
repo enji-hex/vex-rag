@@ -22,3 +22,33 @@ Run from the project directory; relative paths use the working directory.
 - `insert_doc`: indexes a file at `path` under `title` and `domain`. Replaces document on-conflict! Chunks are up to 200 words with 30-word overlap; PDFs are extracted with `pdftotext`.
 - `search_docs`: searches `query` with specified `limit`(default 5). Available modes `HYBRID` (default), `VECTOR`, `BM25`. Each retrieval method considers up to 20 candidates.
 - `delete_doc` [TODO] Deletes document from RAG database.
+
+
+## Usage examples
+
+The server communicates over standard input/output using one JSON-RPC request per line. Send these requests to the running server process.
+
+Initialize and list available tools:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"example-client","version":"1.0"}}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+```
+
+Index a PDF (replace the path with a file accessible to the server process):
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"insert_doc","arguments":{"title":"rfc2812_IRC_Proto.pdf","path":"./files/rfc2812_IRC_Proto.pdf","domain":"software"}}}
+```
+
+Search with BM25:
+
+```json
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"search_docs","arguments":{"query":"what does WHOIS command","limit":5,"mode":"BM25"}}}
+```
+
+Search with vector retrieval:
+
+```json
+{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_docs","arguments":{"query":"what does WHOIS command","limit":5,"mode":"VECTOR"}}}
+```
