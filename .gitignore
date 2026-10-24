@@ -1,0 +1,7 @@
+.vscode/
+.vex/
+models/
+files/
+test/
+vex-rag
+*.o
