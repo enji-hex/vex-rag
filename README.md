@@ -32,6 +32,20 @@ curl -sSL https://codeberg.org/Enji/vex-rag/raw/branch/main/install.sh | sh
 
 ## Usage examples
 
+In agent.
+```json
+{
+  "mcpServers": {
+    "vex-rag": {
+      "command": "VEX_EMB_MODEL=~/.local/share/models/bge-small-en-v1.5.gguf vex-rag",
+      "args": []
+    }
+  }
+}
+```
+
+## MCP protocol call examples
+
 The server communicates over standard input/output using one JSON-RPC request per line. Send these requests to the running server process.
 
 Initialize and list available tools:
