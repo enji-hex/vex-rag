@@ -46,7 +46,7 @@ List documents
 ```json
 {"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"list_docs"}}
 ```
-
+ 
 Index a PDF (replace the path with a file accessible to the server process):
 
 ```json
