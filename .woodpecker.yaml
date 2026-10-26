@@ -16,6 +16,7 @@ pipeline:
       overwrite: true
       files:
         - vex-rag
-    when:
-    event: push
-    evaluate: 'CI_COMMIT_MESSAGE contains "[release]"'
+
+when:
+  event: push
+  evaluate: 'CI_COMMIT_MESSAGE contains "[release]"'
