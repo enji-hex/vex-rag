@@ -2,7 +2,7 @@
 
 REPO="Enji/vex-rag"
 INSTALL_DIR="$HOME/.local/bin"
-MODEL_DIR="/usr/share/models/"
+MODEL_DIR="$HOME/.local/share/models"
 
 MODEL_URL="https://huggingface.co/BAAI/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5-f16.gguf"
 MODEL_FILE="bge-small-en-v1.5.gguf"
