@@ -5,3 +5,4 @@ files/
 test/
 vex-rag
 *.o
+.env
