@@ -3,3 +3,14 @@ BasedOnStyle: Mozilla
 IndentWidth: 4
 AccessModifierOffset: -4
 ColumnLimit: 100
+
+AlwaysBreakAfterDefinitionReturnType: All
+
+AllowShortIfStatementsOnASingleLine: WithoutElse
+
+AlignEscapedNewlines: Left
+
+SpaceBeforeAssignmentOperators: true
+SpaceAroundPointerQualifiers: Default
+PointerAlignment: Left
+BreakStringLiterals: false

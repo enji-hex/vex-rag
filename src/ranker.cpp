@@ -26,8 +26,6 @@ get_col<string>(sqlite3_stmt* stmt, int col)
     return val ? std::string(val) : std::string("");
 }
 
-
-
 vector<int64_t>
 search_semantic([[maybe_unused]] sqlite3* db,
                 sqlite3_stmt* stmt,
@@ -51,23 +49,20 @@ search_bm25(sqlite3* db, const std::string& query, map<int64_t, ScoredChunk>& ch
 {
     sqlite3_stmt* stmt = nullptr;
     vector<int64_t> bm25_ids;
-    if (query.empty())
-        return bm25_ids;
+    if (query.empty()) return bm25_ids;
 
     // compile query, set limit globally later
-    bool ok = (sqlite3_prepare_v2(
-                 db,
-                 R"(SELECT rowid, title, content, domain 
-                 FROM docs WHERE docs MATCH ?1 
-                 ORDER BY bm25(docs) ASC LIMIT 20;)",
-                 -1,
-                 &stmt,
-                 nullptr) == SQLITE_OK);
-    if (!ok)
-        return bm25_ids;
+    bool ok = (sqlite3_prepare_v2(db,
+                                  "SELECT rowid, title, content, domain "
+                                  "FROM docs WHERE docs MATCH ?1 "
+                                  "ORDER BY bm25(docs) ASC LIMIT 20;",
+                                  -1,
+                                  &stmt,
+                                  nullptr) == SQLITE_OK);
+    if (!ok) return bm25_ids;
 
     sqlite3_bind_text(stmt, 1, query.c_str(), -1, SQLITE_STATIC);
-    auto ids= search_semantic(db, stmt, chunk_map);
+    auto ids = search_semantic(db, stmt, chunk_map);
     sqlite3_finalize(stmt);
     return ids;
 }
@@ -77,13 +72,13 @@ search_by_chunk_id(sqlite3* db, vector<int64_t> chunk_ids, map<int64_t, ScoredCh
 {
     sqlite3_stmt* stmt = nullptr;
     vector<int64_t> ids;
-    bool ok =(sqlite3_prepare_v2(db,
+    bool ok =
+      (sqlite3_prepare_v2(db,
                           "SELECT rowid, title, content, domain FROM docs WHERE rowid = ?1;",
                           -1,
                           &stmt,
                           nullptr) == SQLITE_OK);
-    if (!ok)
-        return ids;
+    if (!ok) return ids;
 
     for (int64_t cid : chunk_ids) {
         if (chunk_map.find(cid) == chunk_map.end()) {
@@ -103,17 +98,14 @@ search_vector(sqlite3* db, const vector<float>& query)
     vector<int64_t> vector_ids;
     sqlite3_stmt* stmt = nullptr;
 
-    bool ok =
-      sqlite3_prepare_v2(
-        db,
-        R"(SELECT chunk_id FROM doc_vecs 
-        WHERE embedding MATCH vec_f32(?1) 
-        ORDER BY distance LIMIT 20;)",
-        -1,
-        &stmt,
-        nullptr) == SQLITE_OK;
-    if (!ok)
-        return vector_ids;
+    bool ok = sqlite3_prepare_v2(db,
+                                 "SELECT chunk_id FROM doc_vecs "
+                                 "WHERE embedding MATCH vec_f32(?1) "
+                                 "ORDER BY distance LIMIT 20;",
+                                 -1,
+                                 &stmt,
+                                 nullptr) == SQLITE_OK;
+    if (!ok) return vector_ids;
 
     sqlite3_bind_blob(stmt, 1, query.data(), query.size() * sizeof(float), SQLITE_STATIC);
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -148,8 +140,8 @@ hybrid_search(sqlite3* db,
         vector<int64_t> bm25_ids = search_bm25(db, query, chunk_map);
         add_rank_scores(bm25_ids);
     }
-    if (smode != SearchMode::BM25){
-        vector<int64_t> vec_ids  = search_vector(db, query_embedding);
+    if (smode != SearchMode::BM25) {
+        vector<int64_t> vec_ids = search_vector(db, query_embedding);
         add_rank_scores(vec_ids);
         // collect data for vector results
         search_by_chunk_id(db, vec_ids, chunk_map);

@@ -26,8 +26,8 @@ struct Param
 struct Tool
 {
     string name, description;
-    std::vector<string> required; // should be at least one
-    std::vector<Param> params;
+    std::vector<string> required = {};
+    std::vector<Param> params = {};
 };
 
 json
@@ -37,16 +37,16 @@ to_mcp_json(Tool& tool)
     for (auto& p : tool.params) {
         props[p.name] = { { "type", p.type }, { "description", p.desc } };
         if (!p.enum_list.empty())
-            props[p.name].push_back({ "enum", { p.enum_list } });
+            props[p.name]["enum"] = p.enum_list;
     }
 
     return {
         { "name", tool.name },
         { "description", tool.description },
         { "inputSchema",
-          { { "type", "object" },
+          {{ "type", "object" },
             { "properties", props },
-            { "required", json::array({ tool.required }) } } },
+            { "required",  tool.required }}},
     };
 }
 

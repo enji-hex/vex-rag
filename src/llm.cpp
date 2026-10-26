@@ -59,14 +59,17 @@ std::vector<float> LLamaEmb::compute(const std::string& text) {
     std::vector<llama_token> tokens(max_tokens);
 
     // llama_tokenize returns the number of tokens written (or required if buffer is too small)
-    int n_tokens = llama_tokenize(vocab, text.c_str(), text.size(), tokens.data(), tokens.size(), true, true);
+    int n_tokens = llama_tokenize(vocab, text.c_str(), text.size(), 
+        tokens.data(), tokens.size(), true, true);
     
     if (n_tokens < 0) {
         // If it returned negative, it means our buffer was too small; resize and retry
         tokens.resize(-n_tokens);
-        n_tokens = llama_tokenize(vocab, text.c_str(), text.size(), tokens.data(), tokens.size(), true, true);
+        n_tokens = llama_tokenize(vocab, text.c_str(), text.size(), 
+            tokens.data(), tokens.size(), true, true);
         if (n_tokens < 0) {
-            throw std::runtime_error("failed tokenize text for embedding: " + std::to_string(n_tokens));
+            throw std::runtime_error("failed tokenize text for embedding: " 
+                + std::to_string(n_tokens));
         }
     }
 
@@ -85,7 +88,8 @@ std::vector<float> LLamaEmb::compute(const std::string& text) {
         int32_t idx = llama_batch_ext_add_token(batch, 0, tokens[i]);
         if (idx < 0) {
             llama_batch_ext_free(batch);
-            throw std::runtime_error("Failed to add token to batch_ext. Error code: " + std::to_string(idx));
+            throw std::runtime_error("Failed to add token to batch_ext. Error code: " 
+                + std::to_string(idx));
         }
 
         llama_pos pos = i;

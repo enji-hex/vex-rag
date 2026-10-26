@@ -2,7 +2,7 @@ CC       ?= gcc
 CXX      ?= g++
 
 CFLAGS   := -O2 -I./src -I./src/lib/sqlite_vec
-CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Werror \
+CXXFLAGS := -std=c++20 -O2 -Wall -Wextra -Werror -Wpedantic \
             -I./src -I./src/lib/sqlite_vec \
             -I./src/lib/llama.cpp/include -I./src/lib/llama.cpp/ggml/include
 

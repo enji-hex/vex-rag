@@ -29,6 +29,18 @@ bool exec_stmt(sqlite3* db, const char* sql, Args&&... args) {
     return ok;
 }
 
+inline json mcp_text_resp(const std::string& text, bool is_err = false){
+    return {
+        {"isError",is_err},
+        {"content",json::array({
+            json{
+                {"type","text"},
+                {"text",text}
+            }
+        })}
+    };
+}
+
 class DocEngine {
    private:
     sqlite3* db;
@@ -85,14 +97,27 @@ class DocEngine {
         if (db) sqlite3_close(db);
     }
 
-    std::vector<std::string> get_docs(){
-        std::vector<std::string> titles;
+    json list_docs(){
+        json results = json::array();
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db,"SELECT title FROM docs;",-1,&stmt,nullptr);
+        sqlite3_prepare_v2(db,
+            "SELECT title,domain,COUNT(*) FROM docs "
+            "GROUP BY title,domain;",
+            -1,&stmt,nullptr);
+
+        int total = 0;
         while (sqlite3_step(stmt) == SQLITE_ROW) {
-            titles.push_back(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+            results.push_back({
+                {"title",reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))},
+                {"domain",reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1))},
+                {"chunk_count",sqlite3_column_int64(stmt,2)}
+            });total++;
         }
-        return titles;
+        sqlite3_finalize(stmt);
+        return {
+            {"documents",results},
+            {"total_count",total}
+        };
     }
 
     bool delete_doc(
@@ -104,7 +129,7 @@ class DocEngine {
             && exec_stmt(db,"DELETE FROM docs WHERE title = ?1",title)
             && exec_stmt(db,"DELETE FROM doc_hashes WHERE title = ?1",title);
     }
-
+    
     bool insert_doc(
         const std::string& title, 
         const std::string& content,
@@ -233,12 +258,17 @@ json handle_req(const json& req,DocEngine& engine){
                 Param{.name = "title",.desc = "Document title"},
             }
         };
+        Tool list_docs = Tool {
+            .name = "list_docs",
+            .description = "Returns list of documents inside RAG database",
+        };
         
-        // add del_docs later
         res["result"] = {
             {"tools", json::array({
                 to_mcp_json(search_tool),
                 to_mcp_json(insert_tool),
+                to_mcp_json(delete_doc),
+                to_mcp_json(list_docs)
             })}
         };
 
@@ -248,37 +278,34 @@ json handle_req(const json& req,DocEngine& engine){
 
         if (tool_name == "search_docs") {
             json matches = engine.search(args.value("query",""),args.value("limit",5),args.value("mode","HYBRID"));
-            res["result"] = {
-                {"content",json::array({
-                    {
-                        {"type","text"},
-                        {"text",matches.dump(2)}
-                    }
-                })}
-            };
+            res["result"] = mcp_text_resp(matches.dump(2));
         } else if (tool_name == "insert_doc") {
             std::vector<std::string> chunks = TextChunker::chunk_file(
                 args.value("path","").c_str(),
                 200,
                 30
             );
-            std::string path = args.value("path", "");
-            std::string title = args.value("title", "");
-            std::string domain = args.value("domain", "general");
+            std::string path    = args.value("path", "");
+            std::string title   = args.value("title", "");
+            std::string domain  = args.value("domain", "general");
             
             int added = 0;
             for (size_t i = 0; i < chunks.size(); i++){
                 if (engine.insert_doc(title, chunks[i],domain))
                     added++;
             };
-            res["result"] = {
-                {"content",json::array({
-                    {
-                        {"type","text"},
-                        {"text", "Indexed " + std::to_string(added) + " chunks from " + title}
-                    }
-                })}
-            };
+            res["result"] = mcp_text_resp("Indexed " + std::to_string(added) 
+                + " chunks from " + title);
+        } 
+        else if (tool_name == "delete_doc"){
+            std::string title = args.value("title", "");
+            bool ok = engine.delete_doc(title);
+            res["result"] = mcp_text_resp(ok 
+                ? "Deleted " + title 
+                : "Failed " + title, !ok);
+
+        } else if (tool_name == "list_docs") {
+            res["result"] = mcp_text_resp(engine.list_docs().dump());
         } else {
             res["error"] = {{"code",-32601},{"message","Tool not found"}};
         }
@@ -297,8 +324,6 @@ int main() {
     cerr << "Selected db_path " << db_path << endl;
     DocEngine engine(db_path);
     LLamaEmb::getInst();
-
-    
 
     std::string line;
 
