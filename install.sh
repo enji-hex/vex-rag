@@ -10,6 +10,7 @@ mkdir -p "$INSTALL_DIR" "$MODEL_DIR"
 BINARY_URL="https://codeberg.org/Enji/vex-rag/releases/download/latest/vex-rag"
 
 curl -L --progress-bar -o "$INSTALL_DIR/vex-rag" "$BINARY_URL"
+chmod +x "$INSTALL_DIR/vex-rag" 
 
 [ ! -f "$MODEL_DIR/$MODEL_FILE" ] && {
     curl -L --progress-bar -o "$MODEL_DIR/$MODEL_FILE" "$MODEL_URL"
