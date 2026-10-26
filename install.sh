@@ -3,7 +3,7 @@
 INSTALL_DIR="$HOME/.local/bin"
 MODEL_DIR="$HOME/.local/share/models"
 
-MODEL_URL="https://huggingface.co/BAAI/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5-f16.gguf"
+MODEL_URL="https://huggingface.co/CompendiumLabs/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5-f32.gguf?download=true"
 MODEL_FILE="bge-small-en-v1.5.gguf"
 
 mkdir -p "$INSTALL_DIR" "$MODEL_DIR"
