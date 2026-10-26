@@ -27,6 +27,7 @@ src/lib/sqlite_vec/sqlite-vec.o: src/lib/sqlite_vec/sqlite-vec.c
 vex-rag: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 	strip --strip-all ./vex-rag
+    chmod +x ./vex-rag
 
 clean:
 	rm -f src/*.o src/lib/sqlite_vec/*.o vex-rag

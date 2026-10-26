@@ -1,6 +1,5 @@
 #!/bin/sh
 
-REPO="Enji/vex-rag"
 INSTALL_DIR="$HOME/.local/bin"
 MODEL_DIR="$HOME/.local/share/models"
 
@@ -8,7 +7,7 @@ MODEL_URL="https://huggingface.co/BAAI/bge-small-en-v1.5-gguf/resolve/main/bge-s
 MODEL_FILE="bge-small-en-v1.5.gguf"
 
 mkdir -p "$INSTALL_DIR" "$MODEL_DIR"
-BINARY_URL="https://codeberg.org/${REPO}/releases/latest/download/vex-rag"
+BINARY_URL="https://codeberg.org/Enji/vex-rag/releases/download/latest/vex-rag"
 
 curl -L --progress-bar -o "$INSTALL_DIR/vex-rag" "$BINARY_URL"
 
