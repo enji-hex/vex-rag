@@ -1,0 +1,21 @@
+pipeline:
+  build:
+    image: gcc:14
+    commands:
+      - make clean
+      - make RELEASE=1
+
+  release:
+    image: woodpeckerci/plugin-release:latest
+    settings:
+      forge_type: codeberg
+      api_key:
+        from_secret: codeberg_token
+      title: "Latest Release"
+      note: "Automated build from main branch."
+      overwrite: true
+      files:
+        - vex-rag
+    when:
+    event: push
+    evaluate: 'CI_COMMIT_MESSAGE contains "[release]"'
