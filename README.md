@@ -24,6 +24,11 @@ Run from the project directory; relative paths use the working directory.
 - `delete_doc` Deletes document from RAG database by its title.
 - `list_docs` Returns list of indexed documents in RAG database.
 
+## Installation
+
+```bash
+curl -sSL https://codeberg.org/Enji/vex-rag/raw/branch/main/install.sh | sh
+```
 
 ## Usage examples
 
