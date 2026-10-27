@@ -36,9 +36,12 @@ In agent.
 ```json
 {
   "mcpServers": {
-    "vex-rag": {
-      "command": "VEX_EMB_MODEL=~/.local/share/models/bge-small-en-v1.5.gguf vex-rag",
-      "args": []
+    "time": {
+      "command": "vex-rag",
+      "args": [],
+      "env":{
+        "VEX_EMB_MODEL":"/home/user/.local/share/models/bge-small-en-v1.5.gguf"
+      }
     }
   }
 }
